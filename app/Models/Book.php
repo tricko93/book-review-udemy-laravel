@@ -93,4 +93,64 @@ class Book extends Model
             $query->whereBetween('created_at', [$from, $to]);
         }
     }
+
+    /**
+     * Scope that retrieves books with the most reviews in the last month
+     * along with their average ratings and books with at least 2 reviews.
+     *
+     * @param  Builder  $query
+     * @return Builder|QueryBuilder
+     */
+    public function scopePopularLastMonth(Builder $query): 
+    Builder|QueryBuilder
+    {
+        return $query->popular(now()->subMonth(), now())
+            ->highestRated(now()->subMonth(), now())
+            ->minReviews(2);
+    }
+
+    /**
+     * Retrieves books with the most reviews in the last 6 months
+     * along with their average ratings and books with at least 5 reviews.
+     *
+     * @param  Builder  $query
+     * @return Builder|QueryBuilder
+     */
+    public function scopePopularLast6Months(Builder $query): 
+    Builder|QueryBuilder
+    {
+        return $query->popular(now()->subMonths(6), now())
+            ->highestRated(now()->subMonths(6), now())
+            ->minReviews(5);
+    }
+
+    /**
+     * Retrieves books with the average ratings in the last month
+     * along with their popularity ratings and books with at least 2 reviews.
+     *
+     * @param  Builder  $query
+     * @return Builder|QueryBuilder
+     */
+    public function scopeHighestRatedLastMonth(Builder $query): 
+    Builder|QueryBuilder
+    {
+        return $query->highestRated(now()->subMonth(), now())
+            ->popular(now()->subMonth(), now())
+            ->minReviews(2);
+    }
+
+    /**
+     * Retrieves books with the average ratings in the last 6 months
+     * along with their popularity ratings and books with at least 5 reviews.
+     *
+     * @param  Builder  $query
+     * @return Builder|QueryBuilder
+     */
+    public function scopeHighestRatedLast6Months(Builder $query): 
+    Builder|QueryBuilder
+    {
+        return $query->highestRated(now()->subMonths(6), now())
+            ->popular(now()->subMonths(6), now())
+            ->minReviews(5);
+    }
 }
