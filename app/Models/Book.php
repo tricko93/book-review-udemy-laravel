@@ -64,6 +64,18 @@ class Book extends Model
     }
 
     /**
+     * Scope to retrieve books with a minimum number of reviews.
+     * 
+     * @param  Builder  $query
+     * @param  int  $minReviews
+     * @return Builder|QueryBuilder
+     */
+    public function scopeMinReviews(Builder $query, int $minReviews): Builder|QueryBuilder
+    {
+        return $query->having('reviews_count', '>=', $minReviews);
+    }
+
+    /**
      * Filter books by the start date and end date.
      *
      * @param  Builder  $query
