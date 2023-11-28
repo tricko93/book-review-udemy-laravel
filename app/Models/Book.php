@@ -32,6 +32,36 @@ class Book extends Model
     }
 
     /**
+     * Scope to eager load the count of reviews for a model within a specified date range.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string|null  $from
+     * @param  string|null  $to
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithReviewsCount(Builder $query, $from = null, $to = null): Builder|QueryBuilder
+    {
+        return $query->withCount([
+            'reviews' => fn(Builder $q) => $this->dateRangeFilter($q, $from, $to)
+        ]);
+    }
+
+    /**
+     * Scope to eager load the average rating of reviews for a model within a specified date range.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string|null  $from
+     * @param  string|null  $to
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithAvgRating(Builder $query, $from = null, $to = null): Builder|QueryBuilder
+    {
+        return $query->withAvg([
+            'reviews' => fn(Builder $q) => $this->dateRangeFilter($q, $from, $to)
+        ], 'rating');
+    }
+
+    /**
      * Scope to retrieve books sorted by popularity.
      *
      * @param  Builder  $query
@@ -41,9 +71,7 @@ class Book extends Model
      */
     public function scopePopular(Builder $query, $from = null, $to = null): Builder|QueryBuilder
     {
-        return $query->withCount([
-            'reviews' => fn (Builder $q) => $this->dateRangeFilter($q, $from, $to)
-        ])
+        return $query->withReviewsCount()
             ->orderBy('reviews_count', 'desc');
     }
 
@@ -57,9 +85,7 @@ class Book extends Model
      */
     public function scopeHighestRated(Builder $query, $from = null, $to = null): Builder|QueryBuilder
     {
-        return $query->withAvg([
-            'reviews' => fn (Builder $q) => $this->dateRangeFilter($q, $from, $to)
-        ], 'rating')
+        return $query->withAvgRating()
             ->orderBy('reviews_avg_rating', 'desc');
     }
 
@@ -152,5 +178,20 @@ class Book extends Model
         return $query->highestRated(now()->subMonths(6), now())
             ->popular(now()->subMonths(6), now())
             ->minReviews(5);
+    }
+
+    /**
+     * Perform actions after the 'Review' model has been updated or deleted.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        static::updated(
+            fn (Review $review) => cache()->forget('book:' . $review->book_id)
+        );
+        static::deleted(
+            fn (Review $review) => cache()->forget('book:' . $review->book_id)
+        );
     }
 }
