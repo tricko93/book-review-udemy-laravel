@@ -9,6 +9,19 @@ use App\Models\Book;
 class ReviewController extends Controller
 {
     /**
+     * Apply middleware to the ReviewController instance.
+     *
+     * Applies the 'throttle:reviews' middleware to the 'store' method
+     * to limit the rate of storing reviews.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('throttle:reviews')->only(['store']);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()

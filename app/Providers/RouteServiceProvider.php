@@ -37,4 +37,24 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/web.php'));
         });
     }
+
+    /**
+     * Configure rate limiting for the API and reviews endpoints.
+     *
+     * Defines rate limiting for the 'api' and 'reviews' rate limiters,
+     * specifying the allowed number of requests per minute/hour
+     * based on the user ID or IP if the user is not authenticated.
+     *
+     * @return void
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for ('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for ('reviews', function (Request $request) {
+            return Limit::perHour(3)->by($request->user()?->id ?: $request->ip());
+        });
+    }
 }
