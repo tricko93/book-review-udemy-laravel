@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Models\Book;
 
 class ReviewController extends Controller
@@ -28,14 +29,27 @@ class ReviewController extends Controller
      */
     public function store(Request $request, Book $book)
     {
-        $data = $request->validate([
-            'review' => 'required|min:15',
-            'rating' => 'required|min:1|max:5|integer'
-        ]);
+        $validator = Validator::Make(
+            [
+                'review' => $request['review'],
+                'rating' => $request['rating'],
+            ],
+            [
+                'review' => 'required|min:15',
+                'rating' => 'required|min:1|max:5|integer',
+            ]
+        );
+
+        if ($validator->fails())
+        {
+            session()->flash('error', 'Review field requires more than 15 characters!');
+        }
+
+        $data = $validator->validate();
 
         $book->reviews()->create($data);
 
-        return redirect()->route('books.show', $book);
+        return redirect()->route('books.show', $book)->with('success', 'Review added successfully. Thank you!');
     }
 
     /**
